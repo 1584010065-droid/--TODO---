@@ -11,9 +11,11 @@ class TodoApp {
     initElements() {
         this.todoInput = document.getElementById('todoInput');
         this.addBtn = document.getElementById('addBtn');
+        this.prioritySelect = document.getElementById('prioritySelect');
         this.todoList = document.getElementById('todoList');
         this.taskCount = document.getElementById('taskCount');
         this.clearCompletedBtn = document.getElementById('clearCompleted');
+        this.clearAllBtn = document.getElementById('clearAll');
     }
 
     // 绑定事件
@@ -30,6 +32,9 @@ class TodoApp {
 
         // 清除已完成任务
         this.clearCompletedBtn.addEventListener('click', () => this.clearCompleted());
+        
+        // 全部删除任务
+        this.clearAllBtn.addEventListener('click', () => this.clearAll());
     }
 
     // 添加新任务
@@ -48,6 +53,7 @@ class TodoApp {
             id: Date.now(),
             text: text,
             completed: false,
+            priority: this.prioritySelect.value,
             createdAt: new Date().toISOString()
         };
 
@@ -92,6 +98,17 @@ class TodoApp {
         }
     }
 
+    // 全部删除任务
+    clearAll() {
+        if (this.todos.length === 0) return;
+        
+        if (confirm(`确定要删除所有 ${this.todos.length} 个任务吗？`)) {
+            this.todos = [];
+            this.saveToLocalStorage();
+            this.render();
+        }
+    }
+
     // 渲染任务列表
     render() {
         if (this.todos.length === 0) {
@@ -123,12 +140,30 @@ class TodoApp {
         this.updateFooter();
     }
 
+    // 格式化创建时间
+    formatCreatedTime(dateString) {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `[${year}-${month}-${day} ${hours}:${minutes}]`;
+    }
+
     // 创建任务 HTML
     createTodoHTML(todo) {
+        const priorityClass = todo.priority === 'important' ? 'priority-important' : 'priority-normal';
+        const priorityText = todo.priority === 'important' ? '重要' : '';
+        
         return `
-            <li class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+            <li class="todo-item ${todo.completed ? 'completed' : ''} ${priorityClass}" data-id="${todo.id}">
                 <div class="checkbox ${todo.completed ? 'checked' : ''}"></div>
-                <span class="todo-text">${this.escapeHtml(todo.text)}</span>
+                <div class="todo-content">
+                    <span class="todo-text">${this.escapeHtml(todo.text)}</span>
+                    ${priorityText ? `<span class="priority-tag">${priorityText}</span>` : ''}
+                    <div class="todo-time">${this.formatCreatedTime(todo.createdAt)}</div>
+                </div>
                 <button class="delete-btn" title="删除">×</button>
             </li>
         `;
@@ -144,6 +179,9 @@ class TodoApp {
         
         this.clearCompletedBtn.disabled = completedCount === 0;
         this.clearCompletedBtn.style.opacity = completedCount === 0 ? '0.5' : '1';
+        
+        this.clearAllBtn.disabled = totalCount === 0;
+        this.clearAllBtn.style.opacity = totalCount === 0 ? '0.5' : '1';
     }
 
     // 转义 HTML 防止 XSS

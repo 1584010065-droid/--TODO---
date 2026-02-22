@@ -13,6 +13,10 @@
             
             <div class="input-section">
                 <input type="text" id="todoInput" placeholder="添加新任务..." maxlength="100">
+                <select id="prioritySelect" class="priority-select">
+                    <option value="normal">普通</option>
+                    <option value="important">重要</option>
+                </select>
                 <button id="addBtn" class="add-btn">+</button>
             </div>
             
@@ -22,7 +26,10 @@
             
             <div class="footer">
                 <span id="taskCount">0 个任务</span>
-                <button id="clearCompleted" class="clear-btn">清除已完成</button>
+                <div class="footer-buttons">
+                    <button id="clearCompleted" class="clear-btn">清除已完成</button>
+                    <button id="clearAll" class="clear-all-btn">全部删除</button>
+                </div>
             </div>
         </div>
     </div>
