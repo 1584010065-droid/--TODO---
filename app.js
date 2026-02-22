@@ -16,6 +16,10 @@ class TodoApp {
         this.taskCount = document.getElementById('taskCount');
         this.clearCompletedBtn = document.getElementById('clearCompleted');
         this.clearAllBtn = document.getElementById('clearAll');
+        this.confirmModal = document.getElementById('confirmModal');
+        this.confirmMessage = document.getElementById('confirmMessage');
+        this.confirmOk = document.getElementById('confirmOk');
+        this.confirmCancel = document.getElementById('confirmCancel');
     }
 
     // 绑定事件
@@ -86,27 +90,67 @@ class TodoApp {
         }
     }
 
+    // 显示确认弹窗
+    showConfirm(message, onConfirm) {
+        this.confirmMessage.textContent = message;
+        this.confirmModal.classList.add('show');
+
+        // 清除之前的事件监听器
+        const newOkBtn = this.confirmOk.cloneNode(true);
+        const newCancelBtn = this.confirmCancel.cloneNode(true);
+        this.confirmOk.parentNode.replaceChild(newOkBtn, this.confirmOk);
+        this.confirmCancel.parentNode.replaceChild(newCancelBtn, this.confirmCancel);
+        this.confirmOk = newOkBtn;
+        this.confirmCancel = newCancelBtn;
+
+        // 绑定新的事件
+        this.confirmOk.addEventListener('click', () => {
+            this.confirmModal.classList.remove('show');
+            onConfirm();
+        });
+
+        this.confirmCancel.addEventListener('click', () => {
+            this.confirmModal.classList.remove('show');
+        });
+
+        // 点击遮罩层关闭
+        this.confirmModal.addEventListener('click', (e) => {
+            if (e.target === this.confirmModal) {
+                this.confirmModal.classList.remove('show');
+            }
+        });
+
+        // ESC键关闭
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.confirmModal.classList.remove('show');
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+    }
+
     // 清除已完成的任务
     clearCompleted() {
         const completedCount = this.todos.filter(t => t.completed).length;
         if (completedCount === 0) return;
 
-        if (confirm(`确定要清除 ${completedCount} 个已完成的任务吗？`)) {
+        this.showConfirm(`确定要清除 ${completedCount} 个已完成的任务吗？`, () => {
             this.todos = this.todos.filter(t => !t.completed);
             this.saveToLocalStorage();
             this.render();
-        }
+        });
     }
 
     // 全部删除任务
     clearAll() {
         if (this.todos.length === 0) return;
-        
-        if (confirm(`确定要删除所有 ${this.todos.length} 个任务吗？`)) {
+
+        this.showConfirm(`确定要删除所有 ${this.todos.length} 个任务吗？`, () => {
             this.todos = [];
             this.saveToLocalStorage();
             this.render();
-        }
+        });
     }
 
     // 渲染任务列表
