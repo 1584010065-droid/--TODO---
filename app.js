@@ -2,6 +2,7 @@
 class TodoApp {
     constructor() {
         this.todos = this.loadFromLocalStorage();
+        this.filter = 'all'; // 筛选状态: all, active, completed
         this.initElements();
         this.bindEvents();
         this.render();
@@ -20,6 +21,7 @@ class TodoApp {
         this.confirmMessage = document.getElementById('confirmMessage');
         this.confirmOk = document.getElementById('confirmOk');
         this.confirmCancel = document.getElementById('confirmCancel');
+        this.filterTabs = document.querySelectorAll('.filter-tab');
     }
 
     // 绑定事件
@@ -36,9 +38,40 @@ class TodoApp {
 
         // 清除已完成任务
         this.clearCompletedBtn.addEventListener('click', () => this.clearCompleted());
-        
+
         // 全部删除任务
         this.clearAllBtn.addEventListener('click', () => this.clearAll());
+
+        // 筛选选项卡事件
+        this.filterTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.setFilter(e.target.dataset.filter);
+            });
+        });
+    }
+
+    // 设置筛选条件
+    setFilter(filter) {
+        this.filter = filter;
+
+        // 更新选项卡样式
+        this.filterTabs.forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.filter === filter);
+        });
+
+        this.render();
+    }
+
+    // 根据筛选条件获取任务
+    getFilteredTodos() {
+        switch (this.filter) {
+            case 'active':
+                return this.todos.filter(t => !t.completed);
+            case 'completed':
+                return this.todos.filter(t => t.completed);
+            default:
+                return this.todos;
+        }
     }
 
     // 添加新任务
@@ -155,16 +188,23 @@ class TodoApp {
 
     // 渲染任务列表
     render() {
-        if (this.todos.length === 0) {
+        const filteredTodos = this.getFilteredTodos();
+
+        if (filteredTodos.length === 0) {
+            const emptyMessages = {
+                all: '暂无任务，添加一个吧！',
+                active: '没有进行中的任务',
+                completed: '没有已完成的任务'
+            };
             this.todoList.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">📋</div>
-                    <div class="empty-state-text">暂无任务，添加一个吧！</div>
+                    <div class="empty-state-text">${emptyMessages[this.filter]}</div>
                 </div>
             `;
         } else {
-            this.todoList.innerHTML = this.todos.map(todo => this.createTodoHTML(todo)).join('');
-            
+            this.todoList.innerHTML = filteredTodos.map(todo => this.createTodoHTML(todo)).join('');
+
             // 绑定复选框和删除按钮事件
             this.todoList.querySelectorAll('.checkbox').forEach(checkbox => {
                 checkbox.addEventListener('click', (e) => {
@@ -177,6 +217,14 @@ class TodoApp {
                 btn.addEventListener('click', (e) => {
                     const id = parseInt(e.target.closest('.todo-item').dataset.id);
                     this.deleteTodo(id);
+                });
+            });
+
+            // 编辑按钮事件
+            this.todoList.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.closest('.todo-item').dataset.id);
+                    this.editTodo(id);
                 });
             });
         }
@@ -199,7 +247,7 @@ class TodoApp {
     createTodoHTML(todo) {
         const priorityClass = todo.priority === 'important' ? 'priority-important' : 'priority-normal';
         const priorityText = todo.priority === 'important' ? '重要' : '';
-        
+
         return `
             <li class="todo-item ${todo.completed ? 'completed' : ''} ${priorityClass}" data-id="${todo.id}">
                 <div class="checkbox ${todo.completed ? 'checked' : ''}"></div>
@@ -208,9 +256,60 @@ class TodoApp {
                     ${priorityText ? `<span class="priority-tag">${priorityText}</span>` : ''}
                     <div class="todo-time">${this.formatCreatedTime(todo.createdAt)}</div>
                 </div>
+                <button class="edit-btn" title="编辑">✎</button>
                 <button class="delete-btn" title="删除">×</button>
             </li>
         `;
+    }
+
+    // 编辑任务
+    editTodo(id) {
+        const todo = this.todos.find(t => t.id === id);
+        if (!todo) return;
+
+        const todoElement = document.querySelector(`[data-id="${id}"]`);
+        const textElement = todoElement.querySelector('.todo-text');
+
+        // 保存原文本
+        const originalText = todo.text;
+
+        // 创建输入框
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'edit-input';
+        input.value = originalText;
+        input.maxLength = 100;
+
+        // 替换文本为输入框
+        textElement.replaceWith(input);
+        input.focus();
+        input.select();
+
+        // 保存编辑
+        const saveEdit = () => {
+            const newText = input.value.trim();
+            if (newText && newText !== originalText) {
+                todo.text = newText;
+                this.saveToLocalStorage();
+            }
+            this.render();
+        };
+
+        // 取消编辑
+        const cancelEdit = () => {
+            this.render();
+        };
+
+        // 事件监听
+        input.addEventListener('blur', saveEdit);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                input.blur();
+            } else if (e.key === 'Escape') {
+                input.removeEventListener('blur', saveEdit);
+                cancelEdit();
+            }
+        });
     }
 
     // 更新底部信息
@@ -218,12 +317,28 @@ class TodoApp {
         const totalCount = this.todos.length;
         const activeCount = this.todos.filter(t => !t.completed).length;
         const completedCount = totalCount - activeCount;
+        const filteredTodos = this.getFilteredTodos();
 
-        this.taskCount.textContent = `${activeCount} 个待办 / ${totalCount} 个总计`;
-        
+        // 根据筛选状态显示不同的统计
+        let countText = '';
+        switch (this.filter) {
+            case 'active':
+                countText = `${activeCount} 个待办`;
+                break;
+            case 'completed':
+                countText = `${completedCount} 个已完成`;
+                break;
+            default:
+                countText = `${activeCount} 个待办 / ${totalCount} 个总计`;
+        }
+
+        this.taskCount.textContent = countText;
+
+        // 清除已完成按钮：有已完成任务时可用
         this.clearCompletedBtn.disabled = completedCount === 0;
         this.clearCompletedBtn.style.opacity = completedCount === 0 ? '0.5' : '1';
-        
+
+        // 全部删除按钮：有任务时可用
         this.clearAllBtn.disabled = totalCount === 0;
         this.clearAllBtn.style.opacity = totalCount === 0 ? '0.5' : '1';
     }

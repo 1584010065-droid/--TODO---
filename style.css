@@ -44,7 +44,7 @@ body {
     margin-bottom: 25px;
     font-size: 28px;
     font-weight: 600;
-    padding: 0 20px;
+    padding: 0 20px 0 5px;
 }
 
 .input-section {
@@ -300,6 +300,48 @@ body {
     transform: scale(1.1);
 }
 
+.edit-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: #4a5568;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 5px;
+    transform: scaleX(-1);
+}
+
+.edit-btn:hover {
+    background: #4a5568;
+    color: white;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* 编辑输入框 */
+.edit-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #4299e1;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    background: white;
+    min-width: 200px;
+}
+
+.edit-input:focus {
+    border-color: #3182ce;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
 .footer {
     display: flex;
     justify-content: space-between;
@@ -475,6 +517,41 @@ body {
 
 .checkbox.checked {
     animation: checkPulse 0.3s ease-out;
+}
+
+/* 筛选选项卡 */
+.filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 15px 0;
+    padding: 4px;
+    background: #f7fafc;
+    border-radius: 10px;
+}
+
+.filter-tab {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: #718096;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.filter-tab:hover {
+    color: #4a5568;
+    background: rgba(74, 85, 104, 0.1);
+}
+
+.filter-tab.active {
+    background: white;
+    color: #4a5568;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    font-weight: 600;
 }
 
 /* 删除确认弹窗样式 */

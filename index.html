@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <div class="todo-card">
-            <h1 class="title">📝 待办清单</h1>
+            <h1 class="title">📝 志栋的待办清单</h1>
             
             <div class="input-section">
                 <input type="text" id="todoInput" placeholder="添加新任务..." maxlength="100">
@@ -23,7 +23,14 @@
             <ul id="todoList" class="todo-list">
                 <!-- 任务列表将通过 JavaScript 动态生成 -->
             </ul>
-            
+
+            <!-- 筛选选项卡 -->
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">全部</button>
+                <button class="filter-tab" data-filter="active">进行中</button>
+                <button class="filter-tab" data-filter="completed">已完成</button>
+            </div>
+
             <div class="footer">
                 <span id="taskCount">0 个任务</span>
                 <div class="footer-buttons">
